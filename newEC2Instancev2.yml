@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Metadata:
+  License: Apache-2.0
+Description: 'Create an AWS EC2 instance running the AWS Windows AMI.'
+Parameters:
+  KeyName:
+    Description: Name of an existing EC2 KeyPair
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+  InstanceType:
+    Description: AWS EC2 instance type
+    Type: String
+    Default: t3.small
+    AllowedValues: [t3.small, t3.medium, t3.large, t3.xlarge, t3.2xlarge,
+      m5.large, m5.xlarge, m5.2xlarge, m5.4xlarge,
+      c5.large, c5.xlarge, c5.2xlarge, c5.4xlarge, c5.9xlarge,
+      g3.8xlarge,
+      r5.large, r5.xlarge, r5.2xlarge, r5.4xlarge, r3.12xlarge,
+      i3.xlarge, i3.2xlarge, i3.4xlarge, i3.8xlarge,
+      d2.xlarge, d2.2xlarge, d2.4xlarge, d2.8xlarge]
+    ConstraintDescription: must be a valid EC2 instance type.
+  RDPLocation:
+    Description: The IP address range allowed to RDP to the EC2 instances
+    Type: String
+    MinLength: 9
+    MaxLength: 18
+    Default: 10.0.0.0/16
+    AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+  LatestAmiId:
+    Type:  'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base'
+  Subnet:
+    Description: The subnet for the instance to be placed in
+    Type: AWS::EC2::Subnet::Id
+  SecurityGroup:
+    Type: 'List<AWS::EC2::SecurityGroup::Id>'
+    Description: Sec group for the instance
+    
+
+Resources:
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref 'InstanceType'
+      SecurityGroupIds: !Ref SecurityGroup
+      KeyName: !Ref 'KeyName'
+      ImageId: !Ref 'LatestAmiId'
+      SubnetId: !Ref 'Subnet'
+      Tags:
+        - Key: Name
+          Value: 'NPS Server'
+     
+
+#  Type: AWS::EC2::SecurityGroup
+ # Properties:
+#    GroupDescription: Enable RDP access on port 380
+#    SecurityGroupIngress:
+#     - IpProtocol: tcp
+#       FromPort: 389
+#       ToPort: 389
+#        CidrIp: !Ref 'RDPLocation'
+
+Outputs:
+  InstanceId:
+    Description: Id of the newly created AWS EC2 instance
+    Value: !Ref 'EC2Instance'
+  AZ:
+    Description: AZ of the newly created AWS EC2 instance
+    Value: !GetAtt [EC2Instance, AvailabilityZone]
