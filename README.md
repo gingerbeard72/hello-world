@@ -7,3 +7,5 @@ updated on friday
 updated again on friday in github desktop
 
 v2 branch - created on Saturday
+
+created hello-universe directory for this project
